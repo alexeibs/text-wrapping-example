@@ -2,8 +2,27 @@ import argparse
 import sys
 
 
+def split_big_word(word, width_limit):
+    result = []
+    start = 0
+    while start + width_limit < len(word):
+        result.append(word[start : start + width_limit])
+        start += width_limit
+
+    if start < len(word):
+        result.append(word[start:])
+
+    return result
+
+
 def wrap_text(text, column_width):
-    return [text]
+    words = []
+    for word in text.split():
+        if len(word) > column_width:
+            words += split_big_word(word, column_width)
+        else:
+            words.append(word)
+    return words if words else ['']
 
 
 def parse_args():
