@@ -2,13 +2,82 @@ import argparse
 import sys
 
 
+MAX_WEIGHT = 1000000000
+
+
+def calc_line_weight(words, line_range, column_width):
+    if not line_range:
+        return (0, 0)
+
+    width = len(line_range) - 1 # necessary spaces
+    for i in line_range:
+        width += len(words[i])
+
+    if width > column_width:
+        return (width, MAX_WEIGHT)
+
+    if line_range.stop == len(words):
+        return (width, 0)
+
+    free_space = column_width - width
+    return (width, free_space * free_space * free_space)
+
+
+def format_line(words, line_range, column_width):
+    return ' '.join([words[i] for i in line_range])
+
+
+class SuffixSolution:
+    def __init__(self, words, first_line_range, weight, next_line_suffix):
+        self.words = words
+        self.first_line_range = first_line_range
+        self.suffix_weight = weight
+        self.next_line_suffix = next_line_suffix
+
+    def weight(self):
+        return self.suffix_weight
+
+    def first_line(self, column_width):
+        return format_line(self.words, self.first_line_range, column_width)
+
+    def next(self):
+        return self.next_line_suffix
+
+    def empty(self):
+        return len(self.first_line_range) == 0
+
+
 def wrap_text(text, column_width):
     words = split_text(text, column_width)
     return wrap_words(words, column_width)
 
 
 def wrap_words(words, column_width):
-    return words
+    n_words = len(words)
+    suffixes = [None] * (n_words + 1)
+    suffixes[n_words] = SuffixSolution(words, range(n_words, n_words), 0, None)
+    for i in range(n_words - 1, -1, -1):
+        best = i + 1
+        width, weight = calc_line_weight(words, range(i, best), column_width)
+        best_weight = weight + suffixes[best].weight()
+        for j in range(i + 2, n_words + 1):
+            width, weight = calc_line_weight(words, range(i, j), column_width)
+            if width > column_width:
+                break
+            new_weight = weight + suffixes[j].weight()
+            if new_weight < best_weight:
+                best = j
+                best_weight = new_weight
+
+        suffixes[i] = SuffixSolution(words, range(i, best), best_weight, suffixes[best])
+
+    lines = []
+    suffix = suffixes[0]
+    while not suffix.empty():
+        lines.append(suffix.first_line(column_width))
+        suffix = suffix.next()
+
+    return lines
 
 
 def split_text(text, column_width):
@@ -37,7 +106,7 @@ def split_big_word(word, width_limit):
 def parse_args():
     parser = argparse.ArgumentParser(description='Wrapping text using DP')
     parser.add_argument('--width', dest='column_width', action='store',
-                        default=80, help='text column width')
+                        type=int, default=80, help='text column width')
     return parser.parse_args()
 
 
