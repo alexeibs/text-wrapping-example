@@ -24,13 +24,9 @@ def calc_line_weight(words, line_range, column_width):
     return (width, extra_space * extra_space * extra_space)
 
 
-def format_line(words, line_range, column_width):
+def format_line(words, line_range, width, column_width):
     if not words:
         return ''
-
-    width = len(line_range) - 1 # necessary spaces
-    for i in line_range:
-        width += len(words[i])
 
     extra_space = column_width - width
     if extra_space <= 0 or line_range.stop == len(words):
@@ -50,8 +46,9 @@ def format_line(words, line_range, column_width):
 
 
 class SuffixSolution:
-    def __init__(self, words, first_line_range, weight, next_line_suffix):
+    def __init__(self, words, first_line_range, width, weight, next_line_suffix):
         self.words = words
+        self.first_line_width = width
         self.first_line_range = first_line_range
         self.suffix_weight = weight
         self.next_line_suffix = next_line_suffix
@@ -60,7 +57,7 @@ class SuffixSolution:
         return self.suffix_weight
 
     def first_line(self, column_width):
-        return format_line(self.words, self.first_line_range, column_width)
+        return format_line(self.words, self.first_line_range, self.first_line_width, column_width)
 
     def next(self):
         return self.next_line_suffix
@@ -77,10 +74,10 @@ def wrap_text(text, column_width):
 def wrap_words(words, column_width):
     n_words = len(words)
     suffixes = [None] * (n_words + 1)
-    suffixes[n_words] = SuffixSolution(words, range(n_words, n_words), 0, None)
+    suffixes[n_words] = SuffixSolution(words, range(n_words, n_words), 0, 0, None)
     for i in range(n_words - 1, -1, -1):
         best = i + 1
-        width, weight = calc_line_weight(words, range(i, best), column_width)
+        line_width, weight = calc_line_weight(words, range(i, best), column_width)
         best_weight = weight + suffixes[best].weight()
         for j in range(i + 2, n_words + 1):
             width, weight = calc_line_weight(words, range(i, j), column_width)
@@ -90,8 +87,9 @@ def wrap_words(words, column_width):
             if new_weight < best_weight:
                 best = j
                 best_weight = new_weight
+                line_width = width
 
-        suffixes[i] = SuffixSolution(words, range(i, best), best_weight, suffixes[best])
+        suffixes[i] = SuffixSolution(words, range(i, best), line_width, best_weight, suffixes[best])
 
     lines = []
     suffix = suffixes[0]
