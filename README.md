@@ -1,1 +1,1 @@
-Wrapping texts using dynamic programming
+Small exercise in dynamic programming - Python script for wrapping texts
