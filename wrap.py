@@ -134,9 +134,9 @@ def split_big_word(word, width_limit):
 def parse_args():
     parser = argparse.ArgumentParser(description='Wrapping text using DP')
     parser.add_argument('--input', dest='input_path', action='store',
-                        help='path to input file')
+                        help='path to input file (stdin by default)')
     parser.add_argument('--width', dest='column_width', action='store',
-                        type=int, default=80, help='text column width')
+                        type=int, default=80, help='text column width (80 by default)')
     return parser.parse_args()
 
 
