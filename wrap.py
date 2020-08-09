@@ -5,23 +5,26 @@ import sys
 MAX_WEIGHT = 1000000000
 
 
-def calc_line_weight(words, line_range, column_width):
+def calc_line_width(words, line_range):
     if not line_range:
-        return (0, 0)
+        return 0
 
     width = len(line_range) - 1 # necessary spaces
     for i in line_range:
         width += len(words[i])
+    return width
 
+
+def calc_line_weight(width, column_width, is_last_line):
     if width > column_width:
-        return (width, MAX_WEIGHT)
+        return MAX_WEIGHT
 
-    if line_range.stop == len(words):
+    if is_last_line:
         # ignore extra space in the last line
-        return (width, 0)
+        return 0
 
     extra_space = column_width - width
-    return (width, extra_space * extra_space * extra_space)
+    return extra_space * extra_space * extra_space
 
 
 def format_line(words, line_range, width, column_width):
@@ -77,10 +80,12 @@ def wrap_words(words, column_width):
     suffixes[n_words] = SuffixSolution(words, range(n_words, n_words), 0, 0, None)
     for i in range(n_words - 1, -1, -1):
         best = i + 1
-        line_width, weight = calc_line_weight(words, range(i, best), column_width)
+        line_width = calc_line_width(words, range(i, best))
+        weight = calc_line_weight(line_width, column_width, best == n_words)
         best_weight = weight + suffixes[best].weight()
         for j in range(i + 2, n_words + 1):
-            width, weight = calc_line_weight(words, range(i, j), column_width)
+            width = calc_line_width(words, range(i, j))
+            weight = calc_line_weight(width, column_width, j == n_words)
             if width > column_width:
                 break
             new_weight = weight + suffixes[j].weight()
