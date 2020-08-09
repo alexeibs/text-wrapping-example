@@ -17,14 +17,36 @@ def calc_line_weight(words, line_range, column_width):
         return (width, MAX_WEIGHT)
 
     if line_range.stop == len(words):
+        # ignore extra space in the last line
         return (width, 0)
 
-    free_space = column_width - width
-    return (width, free_space * free_space * free_space)
+    extra_space = column_width - width
+    return (width, extra_space * extra_space * extra_space)
 
 
 def format_line(words, line_range, column_width):
-    return ' '.join([words[i] for i in line_range])
+    if not words:
+        return ''
+
+    width = len(line_range) - 1 # necessary spaces
+    for i in line_range:
+        width += len(words[i])
+
+    extra_space = column_width - width
+    if extra_space <= 0 or line_range.stop == len(words):
+        return ' '.join([words[i] for i in line_range])
+
+    tokens = [words[line_range[0]]]
+    for i in range(1, len(line_range)):
+        if extra_space <= 0:
+            tokens.append(' ')
+        else:
+            # ensure spaces are distributed equally between words
+            sp_start = extra_space * (i - 1) // (len(line_range) - 1)
+            sp_end = extra_space * i // (len(line_range) - 1)
+            tokens.append(' ' * (sp_end - sp_start + 1))
+        tokens.append(words[line_range[i]])
+    return ''.join(tokens)
 
 
 class SuffixSolution:
